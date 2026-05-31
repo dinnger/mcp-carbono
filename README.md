@@ -10,6 +10,13 @@ The transport is **stdio**: the server speaks JSON-RPC over `stdin`/`stdout`, so
 it integrates directly with any MCP client (Claude Desktop, Claude Code, etc.)
 without opening ports or running HTTP servers.
 
+- **npm:** https://www.npmjs.com/package/mcp-carbono
+- **GitHub:** https://github.com/dinnger/mcp-carbono
+
+```bash
+npm i mcp-carbono
+```
+
 ---
 
 ## How it works
@@ -55,21 +62,24 @@ scripts/            →  Puppeteer browser installation
 
 ## Requirements
 
-- [Bun](https://bun.sh) (recommended) or Node.js 20+
+- [Bun](https://bun.sh) — the entrypoint runs on Bun (`#!/usr/bin/env bun`)
 - A Chromium browser for Puppeteer (downloaded automatically on `postinstall`)
 
 ---
 
 ## Installation
 
+Install from npm:
+
 ```bash
-bun install        # installs dependencies and downloads Chromium (postinstall)
+npm i mcp-carbono
 ```
 
-If you need to (re)download the browser manually:
+Installing the package downloads Chromium automatically (via `postinstall`). To
+(re)download the browser manually:
 
 ```bash
-bun run browser:install
+npm run browser:install
 ```
 
 ---
@@ -77,8 +87,8 @@ bun run browser:install
 ## Running
 
 ```bash
-bun run index.ts
-# or
+bunx mcp-carbono
+# or, if installed locally
 bun run start
 ```
 
@@ -87,18 +97,59 @@ The process waits for JSON-RPC messages on stdin. It prints nothing to stdout
 
 ### Configuring an MCP client
 
-Example entry in an MCP client configuration (Claude Desktop / Claude Code):
+#### Claude Code
+
+Add the server with the CLI:
+
+```bash
+claude mcp add carbono -- bunx mcp-carbono
+```
+
+Or, for all your projects (user scope):
+
+```bash
+claude mcp add --scope user carbono -- bunx mcp-carbono
+```
+
+Check it was registered with `claude mcp list`.
+
+#### Claude Desktop
+
+Edit `claude_desktop_config.json`
+(macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`,
+Windows: `%APPDATA%\Claude\claude_desktop_config.json`) and add:
 
 ```json
 {
   "mcpServers": {
     "carbono": {
-      "command": "bun",
-      "args": ["run", "C:/path/to/mcp-carbono/index.ts"]
+      "command": "bunx",
+      "args": ["mcp-carbono"]
     }
   }
 }
 ```
+
+Then restart Claude Desktop.
+
+#### Codex
+
+Add the server to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.carbono]
+command = "bunx"
+args = ["mcp-carbono"]
+```
+
+Or register it with the Codex CLI:
+
+```bash
+codex mcp add carbono -- bunx mcp-carbono
+```
+
+> **Windows note:** if `bunx` is not found, use the absolute path to `bunx.cmd`
+> (or set `command = "cmd"`, `args = ["/c", "bunx", "mcp-carbono"]`).
 
 ---
 

@@ -13,6 +13,14 @@
     "stdio"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinnger/mcp-carbono.git"
+  },
+  "homepage": "https://github.com/dinnger/mcp-carbono#readme",
+  "bugs": {
+    "url": "https://github.com/dinnger/mcp-carbono/issues"
+  },
   "bin": {
     "mcp-carbono": "index.ts"
   },
