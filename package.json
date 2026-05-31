@@ -1,6 +1,6 @@
 {
   "name": "mcp-carbono",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "stdio MCP server that generates images for the AI by rendering HTML/Tailwind to PNG.",
   "type": "module",
   "keywords": [
