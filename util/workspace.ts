@@ -8,6 +8,7 @@ export const paths = {
 	templates: join(envs.WORKSPACE_DIR, "templates"),
 	palettes: join(envs.WORKSPACE_DIR, "palettes"),
 	history: join(envs.WORKSPACE_DIR, "history"),
+	renders: join(envs.WORKSPACE_DIR, "renders"),
 	tmp: join(envs.WORKSPACE_DIR, "tmp"),
 };
 
@@ -26,6 +27,7 @@ export async function ensureWorkspace(): Promise<void> {
 		mkdir(paths.templates, { recursive: true }),
 		mkdir(paths.palettes, { recursive: true }),
 		mkdir(paths.history, { recursive: true }),
+		mkdir(paths.renders, { recursive: true }),
 		mkdir(paths.tmp, { recursive: true }),
 	]);
 	ensured = true;

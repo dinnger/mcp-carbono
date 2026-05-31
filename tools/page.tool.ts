@@ -1,9 +1,12 @@
 ﻿import z from "zod";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { ok } from "../types";
 import type { ToolDefinition } from "../types";
 import { loadDocument, loadPalette, loadTemplate, saveDocument } from "../carbono/store";
 import { appendOperation } from "../carbono/history";
 import { assembleHtml, screenshot } from "../carbono/render";
+import { ensureWorkspace, paths } from "../util/workspace";
 import type { Page } from "../carbono/schema";
 
 async function activePalette(doc: { paletteName?: string }) {
@@ -167,7 +170,7 @@ export const pageTools: ToolDefinition[] = [
 	{
 		name: "carbono_page_screenshot",
 		description:
-			"Renders a page to PNG using headless Chrome. Always returns the image inline as an MCP image content block; in 'file' mode also writes the PNG to disk and includes the path.",
+			"Renders a page to PNG using headless Chrome. Always returns the image inline as an MCP image content block. When save=true (or a path is given) it also writes the PNG to disk and includes the absolute path in the response.",
 		inputSchema: {
 			docId: z.string().describe("ID of the document"),
 			pageId: z.string().describe("ID of the page"),
@@ -183,17 +186,33 @@ export const pageTools: ToolDefinition[] = [
 				.positive()
 				.optional()
 				.describe("Viewport height in px (default 800)"),
+			save: z
+				.boolean()
+				.optional()
+				.describe(
+					"If true, also write the PNG to disk (default workspace/renders/<pageId>.png).",
+				),
+			path: z
+				.string()
+				.optional()
+				.describe(
+					"Absolute or relative path (or directory) where the PNG should be written. Implies save=true.",
+				),
 		},
 		handler: async ({
 			docId,
 			pageId,
 			width,
 			height,
+			save,
+			path,
 		}: {
 			docId: string;
 			pageId: string;
 			width?: number;
 			height?: number;
+			save?: boolean;
+			path?: string;
 		}) => {
 			const doc = await loadDocument(docId);
 			const page = doc.pages.find((p) => p.id === pageId);
@@ -202,15 +221,37 @@ export const pageTools: ToolDefinition[] = [
 			const buf = await screenshot(page, palette, {
 				viewport: width && height ? { width, height } : undefined,
 			});
-			return {
-				content: [
-					{
-						type: "image",
-						data: Buffer.from(buf).toString("base64"),
-						mimeType: "image/png",
-					},
-				],
-			};
+
+			let savedPath: string | undefined;
+			if (save || path) {
+				await ensureWorkspace();
+				// A path ending in a separator or with no .png extension is treated
+				// as a directory; otherwise it's the full target file path.
+				let target: string;
+				if (!path) {
+					target = join(paths.renders, `${pageId}.png`);
+				} else if (path.endsWith("/") || path.endsWith("\\") || !/\.png$/i.test(path)) {
+					target = join(path, `${pageId}.png`);
+				} else {
+					target = path;
+				}
+				target = resolve(target);
+				await mkdir(dirname(target), { recursive: true });
+				await writeFile(target, buf);
+				savedPath = target;
+			}
+
+			const content: Array<Record<string, unknown>> = [
+				{
+					type: "image",
+					data: Buffer.from(buf).toString("base64"),
+					mimeType: "image/png",
+				},
+			];
+			if (savedPath) {
+				content.push({ type: "text", text: `Saved PNG to: ${savedPath}` });
+			}
+			return { content };
 		},
 	},
 ];

@@ -177,7 +177,7 @@ All tools are exposed with the `carbono_` prefix.
 | `carbono_page_delete`     | Deletes a page |
 | `carbono_page_reorder`    | Reorders the pages |
 | `carbono_page_get_html`   | Returns the raw HTML or the assembled document |
-| `carbono_page_screenshot` | **Renders the page to PNG** and returns it inline as an image |
+| `carbono_page_screenshot` | **Renders the page to PNG** and returns it inline. With `save: true` (or a `path`) it also writes the file to disk and returns the absolute path |
 
 ### Palettes
 | Tool | Description |
